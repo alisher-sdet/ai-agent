@@ -1,0 +1,27 @@
+
+# Игнорировать Python
+.venv/
+__pycache__/
+
+
+# Игнорировать все файлы с расширением .log
+logs/
+*.log
+
+# Игнорировать файлы настроек IDE
+.vscode/
+.history/
+*.code-workspace
+
+# Env files
+.env
+.env.test
+.env.local
+
+# macOS system files
+.DS_Store
+
+# others
+keys.txt
+*copy*
+x_*
