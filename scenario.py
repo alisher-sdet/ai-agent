@@ -49,9 +49,7 @@ from autogen_agentchat.conditions import TextMentionTermination
 load_dotenv()
 
 os.environ["MCP_REQUEST_TIMEOUT"] = "20"  # 20 секунд
-os.environ["AUTOGEN_ALLOWED_DIRS"] = (
-    "/Users/user/Documents/ai/ai_rahul/a_autoGen:/Users/user/Documents/ai/ai_agent/a_rahul/LLM-MCP (AI Agent)"
-)
+os.environ["AUTOGEN_ALLOWED_DIRS"] = "/Users/user/Documents/my/ai_ag"
 
 
 async def main():
@@ -69,7 +67,7 @@ async def main():
             4. Combine the data from both tables to create complete registration information
             5. Ensure the email is unique by adding a timestamp or random number if needed
             6. Prepare all the registration data in a structured format so that another agent can understand
-            When ready, write: "DATABASE_DATA_READY - APIAgent should proceed next"
+            When ready, write: "DATABASE DATA READY - ApiAgent should proceed next"
         """
     )
 
@@ -88,9 +86,8 @@ async def main():
 
             3. When you receive the data, immediately construct **two JSON request bodies**:
 
-            **Registration Request (POST /api/ecom/auth/register)**:
-            ```json
-            {{
+            Registration Request (POST /api/ecom/auth/register):
+            {
                 "firstName": "<first_name>",
                 "lastName": "<last_name>",
                 "userEmail": "<email>",
@@ -101,16 +98,13 @@ async def main():
                 "userPassword": "<password>",
                 "confirmPassword": "<password>",
                 "required": true
-            }}
+            }
 
             Login Request (POST /api/ecom/auth/login):
-            {{
+            {
                 "userEmail": "<email>",
                 "userPassword": "<password>"
-            }}
-            Always convert all email addresses to lowercase before making login API calls.
-            If registration succeeds but login fails with "Incorrect email or password",
-            retry login once automatically using the same email converted to lowercase.
+            }
 
             4. For each request:
             - Use the Postman collection tool test_request
@@ -121,39 +115,41 @@ async def main():
                 "Content-Type": "application/json",
                 "Accept": "application/json"
             }
+
+            CRITICAL-1:
             - Always include the correct JSON body in the "body" field of the tool call. Do not send empty requests or omit the body key.
             - Before sending each request, log:
                 - The full headers you send
                 - The full body content
+            
+            CRITICAL-2:
             - If the API returns "First Name is required!" or any missing-field error, it means the request body was not transmitted — automatically retry once with the same data and explicit Content-Type: application/json.
 
             5. After both calls:
-            - If registration succeed (statusCode 200, success true) OR fails with "User already exisits with this Email Id!", then proceed with login
-            - If registration succeed (statusCode 200, success true) OR fails with "User already exisits with this Email Id!" and login succeed (statusCode 200, success true), reply exactly:
-            API SUCCESS
-            - If either fails, reply:
-            API FAILURE - include reason
-
+            - If registration succeed (statusCode 200, success true) OR fails with "User already exits with this Email Id!", then proceed with login
+            - If login succeed (statusCode 200, success true), reply exactly: "API TESTING COMPLETE - ExcelAgent should proceed next"
+            - If login fails, reply: "API TESTING FAILED" and include reason
             Then stop immediately.
         """
     )
 
     excel_agent = factory.create_excel_agent(
         system_message="""
-            You are an Excel data management specialist. ONLY proceed when APIAgent has completed testing.
+            You are an Excel data management specialist. ONLY proceed when ApiAgent has completed testing.
 
             Your task:
-            1. Wait for APIAgent to complete with "API_TESTING_COMPLETE" message that includes login call success
+            1. Wait for ApiAgent to complete with "API TESTING COMPLETE - ExcelAgent should proceed next" message that includes login call success
             2. Extract the registration data from DatabaseAgent's REGISTRATION_DATA message
-            3. Check APIAgent's response for actual login success/failure status
+            3. Check ApiAgent's response for actual login success/failure status
             4. Only save data if login was actually successful
             5. Open /Users/user/Documents/my/ai_ag/w_registered.xlsx
             6. Add the registration data with current timestamp
             7. Save and verify the data
 
-            CRITICAL: Only save data if APIAgent reports successful login, not just attempted login.
+            CRITICAL: Only save data if ApiAgent reports successful login, not just attempted login.
 
-            When complete, write: "REGISTRATION PROCESS COMPLETE" and stop.
+            When complete, write: "REGISTRATION PROCESS COMPLETE" and include resume.
+            Then stop immediately.
         """
     )
 
@@ -173,7 +169,7 @@ async def main():
                 task="""
                 Execute Sequential User Registration Process:
 
-                STEP 1 - DatabaseAgent (FIRST): Get random registration data from database tables and format it clearly.
+                STEP 1 - DatabaseAgent: Get random registration data from database tables and format it clearly.
                 
                 STEP 2 - ApiAgent: Read Postman collection files, then make registration followed by login APIs using the database data.
                 
@@ -181,7 +177,7 @@ async def main():
 
                 Each agent should complete their work fully before the next agent begins.
                 Pass data clearly between agents using the specified formats.
-                """
+            """
             )
             await Console(result)
             break  # ✅ success
